@@ -70,7 +70,6 @@ def login():
             cursor.execute("UPDATE customer SET attempts = ? WHERE name = ?", (0, name))
             conn.commit()
             return name
-            break
         else:
             print("wierdo! Wrong password")
         # Attempt counter
@@ -110,7 +109,8 @@ def history(name):
             print(f"Deposite: {row[3]} | Withdrawal: {row[4]:.2f} | Balance: {row[5]:.2f} | Time: {row[6]}")
     else:
         print("No transactions found for this user.")
-
+    return
+    
 #------------------ time -----------------------------------------
 def time():
     now = datetime.datetime.now()
@@ -120,9 +120,6 @@ def time():
 #------------------ transaction ------------------------------------
 def transactions(name):
     cursor.execute("SELECT id FROM customer WHERE name = ?", (name,))
-    #result = cursor.fetchone()
-    #customer_id = result[0] 
-    #print(customer_id)  
 
     while True:
         action =  input("Type W for withdraw, D for deposite, T for transactions: ").capitalize()
@@ -217,11 +214,11 @@ def main():
     name = login()
     while True:
         transactions(name)
-        fin = ("Do you want this programme to end Y for yes and N for no: ").capitalize()
-        if fin == "N":
-            continue
-        else:
+        fin = input("Do you want this programme to end Y for yes and N for no: ").capitalize()
+        if fin == "Y":
             break
+        else:
+            continue
     print("Thanks for usin Dope A F Bank! Bye!!!")
 
 
