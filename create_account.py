@@ -2,11 +2,12 @@ import sqlite3
 import datetime
 import os
 import time
-#-------------- connect to databse ----------------------------
+import platform
+#-------------- connect to databse --------------------------------
 conn = sqlite3.connect("bankers.db")
 cursor = conn.cursor()
 
-#----------- Do you have an account? --------------------------
+#----------- Do you have an account? ------------------------------
 def create_account():
     while True:
         try:
@@ -36,14 +37,26 @@ def create_account():
     cursor.execute("INSERT INTO customer (name, pin) VALUES (?, ?)", (name, pin))
     conn.commit()
 
-#----------- Lock account --------------------------------------
+    cursor.execute("SELECT id FROM customer WHERE name = ?", (name,))
+    customer_id = cursor.fetchone()
+    print(customer_id[0])
+    cursor.execute("""
+    INSERT INTO transactions (customer_id, deposite, withdrawal, balance, date)
+    VALUES (?, ?, ?, ?, ?);
+    """, (customer_id[0], 0.00, 0.000, 0.00, date()))
+    conn.commit()
+    
+    print(f"Thanks for creating an account {name}")
+    time.sleep(2)
+
+#----------- Lock account -----------------------------------------
 def account_lock(name):
     cursor.execute("SELECT attempts FROM customer WHERE name = ?", (name,))
     if cursor.fetchone()[0] >= 3:
         print("Account locked. Please contact customer service.")
         exit()
 
-#----------- Log in -------------------------------------------
+#----------- Log in -----------------------------------------------
 def login():
     while True:   
         name = input("What is your name?: ")
@@ -58,7 +71,8 @@ def login():
                 break
             else:
                 print("That is not an option braaaaav! Stop taking the mick, end of programme.")
-                break
+                time.sleep(2)
+                main()
 
     account_lock(name)           
     while True:
@@ -84,9 +98,10 @@ def login():
 
         cursor.execute("UPDATE customer SET attempts = ? WHERE name = ?", (attempts, name))
         conn.commit()
+
         #return name
 
-#-------------- show transactions -------------------------------
+#-------------- show transactions ---------------------------------
 def history(name):
     # Get customer ID
     cursor.execute("SELECT id FROM customer WHERE name = ?", (name,))
@@ -111,11 +126,18 @@ def history(name):
         print("No transactions found for this user.")
     return
     
-#------------------ time -----------------------------------------
+#------------------ time ------------------------------------------
 def date():
     now = datetime.datetime.now()
     formatted = now.strftime("%d/%m/%Y %H:%M")
     return formatted
+
+#--------------- clear screen -------------------------------------
+def clear_screen():
+    if platform.system() == "Windows":
+        os.system("cls")
+    else:
+        os.system("clear")
 
 #------------------ transaction ------------------------------------
 def transactions(name):
@@ -142,7 +164,7 @@ def transactions(name):
             else:
                 break
 
-#------------------ Deposite money ----------------------------        
+#------------------ Deposite money --------------------------------        
 def deposite(amount, name):
     cursor.execute("SELECT id FROM customer WHERE name = ?", (name,))
     customer_result = cursor.fetchone()
@@ -185,12 +207,12 @@ def deposite(amount, name):
     latest_transaction = cursor.fetchone()
     print(f"You depositd: £{latest_transaction[2]:.2f} | balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
 
-#--------- Withdraw money --------------------------------
+#------------------- Withdraw money -------------------------------
 def withdrawal(amount, name):
     cursor.execute("SELECT id FROM customer WHERE name = ?", (name,))
     customer_result = cursor.fetchone()
 
-#----------- geting latest balance amount ----------
+#----------- geting latest balance amount ---------------------------
     if customer_result:
         customer_id = customer_result[0]
         
@@ -204,13 +226,12 @@ def withdrawal(amount, name):
         """, (customer_id,))
         
         latest_transaction = cursor.fetchone()
-        #print(f"balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
     else:
         latest_transaction = None
         print(latest_transaction)
 
 
-#------------ updating table --------------------    
+#------------ updating table --------------------------------------------------    
     total = latest_transaction[0] - amount
     cursor.execute("""
     INSERT INTO transactions (customer_id, withdrawal, balance, date)
@@ -228,23 +249,30 @@ def withdrawal(amount, name):
     latest_transaction = cursor.fetchone()
     print(f"You withdrew: £{latest_transaction[2]:.2f} | balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
 
-
+#------------------ main programm ----------------------------------
 def main():
-    #os.system("cls")
+    clear_screen()
 #-------------------------------- Welcome message -------------------------------------------------------------------------
-    print("Welcome to Dope A F bank. The home of your banking needs")
-    name = login()
-    while True:
-        transactions(name)
-        fin = input("Do you want this programme to end Y for yes and N for no: ").capitalize()
-        if fin == "Y":
-            break
-        else:
-            continue
-    print("Thanks for usin Dope A F Bank! Bye!!!")
-    time.sleep(2)
+    choice = input("Welcome to Dope A F bank. The home of your banking needs. Do you have an account? (Y/N): ").capitalize()
+    if choice == "Y":  
+        name = login()
+        while True:
+            transactions(name)
+            fin = input("Do you want this programme to end Y for yes and N for no: ").capitalize()
+            if fin == "Y":
+                break
+            else:
+                continue
+        print("Thanks for usin Dope A F Bank! Bye!!!")
+        time.sleep(2)
+    elif choice == "N":
+        create_account()
+    else:
+        print("Hey buddy that is not a choice (Y/N)!")
+        time.sleep(2)
+        clear_screen()
+        main()
 
 while True:
-
-    os.system("cls")
+    clear_screen()
     main()
