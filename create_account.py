@@ -78,13 +78,13 @@ def login():
             attempts = result[0]
             if attempts >= 3:
                 print("Account locked")
-                break
+                main()
             else:
                 attempts += 1
 
         cursor.execute("UPDATE customer SET attempts = ? WHERE name = ?", (attempts, name))
         conn.commit()
-        return name
+        #return name
 
 #-------------- show transactions -------------------------------
 def history(name):
@@ -112,7 +112,7 @@ def history(name):
     return
     
 #------------------ time -----------------------------------------
-def time():
+def date():
     now = datetime.datetime.now()
     formatted = now.strftime("%d/%m/%Y %H:%M")
     return formatted
@@ -136,7 +136,7 @@ def transactions(name):
             history(name)
             break
         else:
-            option = input("That is not an option, do you want to continue, Y for yes, other for no: ").capitalize()
+            option = input("Do you want to continue? Y for yes, other for no: ").capitalize()
             if option == "Y":
                 continue
             else:
@@ -161,18 +161,29 @@ def deposite(amount, name):
         """, (customer_id,))
         
         latest_transaction = cursor.fetchone()
-        print(f"balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
+        #print(f"balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
     else:
         latest_transaction = None
         print(latest_transaction)
+
 
 #------------ updating table --------------------    
     total = latest_transaction[0] + amount
     cursor.execute("""
     INSERT INTO transactions (customer_id, deposite, balance, date)
     VALUES (?, ?, ?, ?);
-    """, (customer_id, amount, total, time()))
+    """, (customer_id, amount, total, date()))
     conn.commit()
+
+    cursor.execute("""
+        SELECT balance, date, deposite 
+        FROM transactions 
+        WHERE customer_id = ?
+        ORDER BY transaction_id DESC 
+        LIMIT 1 
+    """, (customer_id,))
+    latest_transaction = cursor.fetchone()
+    print(f"You depositd: £{latest_transaction[2]:.2f} | balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
 
 #--------- Withdraw money --------------------------------
 def withdrawal(amount, name):
@@ -193,18 +204,29 @@ def withdrawal(amount, name):
         """, (customer_id,))
         
         latest_transaction = cursor.fetchone()
-        print(latest_transaction)
+        #print(f"balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
     else:
         latest_transaction = None
         print(latest_transaction)
+
 
 #------------ updating table --------------------    
     total = latest_transaction[0] - amount
     cursor.execute("""
     INSERT INTO transactions (customer_id, withdrawal, balance, date)
     VALUES (?, ?, ?, ?);
-    """, (customer_id, amount, total, time()))
+    """, (customer_id, amount, total, date()))
     conn.commit()
+
+    cursor.execute("""
+        SELECT balance, date, withdrawal 
+        FROM transactions 
+        WHERE customer_id = ?
+        ORDER BY transaction_id DESC 
+        LIMIT 1 
+    """, (customer_id,))
+    latest_transaction = cursor.fetchone()
+    print(f"You withdrew: £{latest_transaction[2]:.2f} | balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
 
 
 def main():
@@ -220,6 +242,9 @@ def main():
         else:
             continue
     print("Thanks for usin Dope A F Bank! Bye!!!")
+    time.sleep(2)
 
+while True:
 
-main()
+    os.system("cls")
+    main()

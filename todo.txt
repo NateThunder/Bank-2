@@ -1,1 +1,3 @@
 - Fix transactions
+- fix password
+- fix deposite
