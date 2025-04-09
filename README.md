@@ -4,7 +4,6 @@ A fun and simple Python project for managing bank accounts and savings 🐖🏦
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
 ![Status](https://img.shields.io/badge/status-in%20progress-yellow)
-![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
