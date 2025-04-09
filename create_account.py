@@ -3,6 +3,7 @@ import datetime
 import os
 import time
 import platform
+import msvcrt
 #-------------- connect to databse --------------------------------
 conn = sqlite3.connect("bankers.db")
 cursor = conn.cursor()
@@ -21,13 +22,14 @@ def create_account():
             print("Sorry broski, username is already chosen")
     while True:
         try:
-            pin = int(input("What is your 4 digit pin?: "))
+            pin = int(input("Choose your 4 digit pin fam: "))
         except:
             print("Big man, the pin has to be a 4 digit number bruv!")
         try:
             if len(str(pin))==4:
                 print("My driller!")
                 cursor.execute("SELECT pin FROM customer WHERE pin = ?", (pin,))
+                clear_screen(2)
                 break
             else:
                 print("BIG MAN, 4 DIGIT PIN!")
@@ -39,7 +41,7 @@ def create_account():
 
     cursor.execute("SELECT id FROM customer WHERE name = ?", (name,))
     customer_id = cursor.fetchone()
-    print(customer_id[0])
+    #print(customer_id[0])
     cursor.execute("""
     INSERT INTO transactions (customer_id, deposite, withdrawal, balance, date)
     VALUES (?, ?, ?, ?, ?);
@@ -47,14 +49,32 @@ def create_account():
     conn.commit()
     
     print(f"Thanks for creating an account {name}")
-    time.sleep(2)
+    clear_screen(2)
 
+#----------- Masked pin entry -------------------------------------
+def mask_pin(length):
+    os.system("cls")
+    digits = []
+    x=0
+    for dig in range(length):
+        
+        print(f"Enter your {length}-digit pin: ", "*" * x, end="", flush=True)
+        key = msvcrt.getch()
+
+        os.system("cls")
+        digits.append(key.decode())
+        x +=1
+    print("Enter your 4-digit pin: ", "*" * x, end="", flush=True)
+
+    pin = int("".join(digits))
+    return pin
 #----------- Lock account -----------------------------------------
 def account_lock(name):
     cursor.execute("SELECT attempts FROM customer WHERE name = ?", (name,))
     if cursor.fetchone()[0] >= 3:
         print("Account locked. Please contact customer service.")
-        exit()
+        clear_screen(2)
+        main()
 
 #----------- Log in -----------------------------------------------
 def login():
@@ -66,32 +86,38 @@ def login():
         else:
             option = input("We dont have that username famalam, you wanna try again? Y for yes N for no?: ").capitalize()
             if option == "Y":
+                clear_screen(2)
                 pass
             elif option =="N":
+                clear_screen(2)
                 break
             else:
                 print("That is not an option braaaaav! Stop taking the mick, end of programme.")
-                time.sleep(2)
+                clear_screen(2)
                 main()
 
     account_lock(name)           
     while True:
-        pin = int(input("What is your pin?: ")) #ask for pin
+        pin = mask_pin(4) #ask for pin
         cursor.execute("SELECT pin FROM customer WHERE pin = ? AND name = ?", (pin, name)) #find pin
+        clear_screen(0)
         if cursor.fetchone():
             account_lock(name)
             print("login succesful bruv!")
+            clear_screen(1)
             cursor.execute("UPDATE customer SET attempts = ? WHERE name = ?", (0, name))
             conn.commit()
             return name
         else:
-            print("wierdo! Wrong password")
+            print("weirdo! Wrong password")
+            clear_screen(1)
         # Attempt counter
             cursor.execute("SELECT attempts FROM customer WHERE name = ?", (name,))
             result = cursor.fetchone()
             attempts = result[0]
             if attempts >= 3:
                 print("Account locked")
+                clear_screen(2)
                 main()
             else:
                 attempts += 1
@@ -133,7 +159,8 @@ def date():
     return formatted
 
 #--------------- clear screen -------------------------------------
-def clear_screen():
+def clear_screen(x):
+    time.sleep(x)
     if platform.system() == "Windows":
         os.system("cls")
     else:
@@ -142,23 +169,27 @@ def clear_screen():
 #------------------ transaction ------------------------------------
 def transactions(name):
     cursor.execute("SELECT id FROM customer WHERE name = ?", (name,))
-
+    
     while True:
         action =  input("Type W for withdraw, D for deposite, T for transactions: ").capitalize()
         if action == "W":
+            clear_screen(0)
             amount = f"{float(input("How much would you like to withdraw?: ")):.2f}"
 
             withdrawal(float(amount), name)
             break
         elif action == "D":
+            clear_screen(0)
             amount = f"{float(input("How much would you like to deposite?: ")):.2f}"
             deposite(float(amount), name)
             break
         elif action =="T":
+            clear_screen(0)
             history(name)
             break
         else:
             option = input("Do you want to continue? Y for yes, other for no: ").capitalize()
+            clear_screen(0.2)
             if option == "Y":
                 continue
             else:
@@ -251,15 +282,16 @@ def withdrawal(amount, name):
 
 #------------------ main programm ----------------------------------
 def main():
-    clear_screen()
+    clear_screen(0)
 #-------------------------------- Welcome message -------------------------------------------------------------------------
     choice = input("Welcome to Dope A F bank. The home of your banking needs. Do you have an account? (Y/N): ").capitalize()
     if choice == "Y":  
         name = login()
         while True:
             transactions(name)
-            fin = input("Do you want this programme to end Y for yes and N for no: ").capitalize()
-            if fin == "Y":
+            fin = input("Do you want something else?(Y/N): ").capitalize()
+            clear_screen(0.1)
+            if fin == "N":
                 break
             else:
                 continue
@@ -269,10 +301,9 @@ def main():
         create_account()
     else:
         print("Hey buddy that is not a choice (Y/N)!")
-        time.sleep(2)
-        clear_screen()
+        clear_screen(2)
         main()
 
 while True:
-    clear_screen()
+    clear_screen(0)
     main()
