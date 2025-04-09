@@ -12,30 +12,44 @@ cursor = conn.cursor()
 def create_account():
     while True:
         try:
-            name = input("Please choose a username: ")
+            name = input("Please choose a username: ").capitalize()
             cursor.execute("SELECT name FROM customer WHERE name = ?", (name,))
             if cursor.fetchone():
                 print("Sorry broski, username is already chosen")
+                clear_screen(2)
             else:
-                break
+                name2 = input("Please confirm the username: ").capitalize()
+                if name == name2:
+                    print("Name matches!")
+                    break
+                else:
+                    print("Sorry broski, name does not match try again!")
+                    clear_screen(2)
+                    continue
         except:
             print("Sorry broski, username is already chosen")
+
     while True:
         try:
-            pin = int(input("Choose your 4 digit pin fam: "))
+            pin = mask_pin(4)
+            print("\nPlease confirm your pin")
+            clear_screen(1)
+            pin2= mask_pin(4)
+            if pin != pin2:
+                print("\nPin does not match fam!")
+                clear_screen(1)
+                choice = input("Do you want to try again? Y for yes of other for no: ").capitalize()
+                if choice == "Y":
+                    print("OK, lets try again!")
+                    clear_screen(2)
+                    create_account()
+                else:
+                    main()
+            else:
+                break
         except:
             print("Big man, the pin has to be a 4 digit number bruv!")
-        try:
-            if len(str(pin))==4:
-                print("My driller!")
-                cursor.execute("SELECT pin FROM customer WHERE pin = ?", (pin,))
-                clear_screen(2)
-                break
-            else:
-                print("BIG MAN, 4 DIGIT PIN!")
-                continue
-        except:
-            print("BIG MAN, 4 DIGIT PIN!")
+   
     cursor.execute("INSERT INTO customer (name, pin) VALUES (?, ?)", (name, pin))
     conn.commit()
 
@@ -47,7 +61,7 @@ def create_account():
     VALUES (?, ?, ?, ?, ?);
     """, (customer_id[0], 0.00, 0.000, 0.00, date()))
     conn.commit()
-    
+    clear_screen(0)
     print(f"Thanks for creating an account {name}")
     clear_screen(2)
 
@@ -68,6 +82,7 @@ def mask_pin(length):
 
     pin = int("".join(digits))
     return pin
+
 #----------- Lock account -----------------------------------------
 def account_lock(name):
     cursor.execute("SELECT attempts FROM customer WHERE name = ?", (name,))
@@ -79,18 +94,18 @@ def account_lock(name):
 #----------- Log in -----------------------------------------------
 def login():
     while True:   
-        name = input("What is your name?: ")
+        name = input("What is your name?: ").capitalize()
         cursor.execute("SELECT name FROM customer WHERE name = ?", (name,))
         if cursor.fetchone():
             break
         else:
             option = input("We dont have that username famalam, you wanna try again? Y for yes N for no?: ").capitalize()
             if option == "Y":
-                clear_screen(2)
+                clear_screen(0.2)
                 pass
             elif option =="N":
-                clear_screen(2)
-                break
+                clear_screen(0.2)
+                main()
             else:
                 print("That is not an option braaaaav! Stop taking the mick, end of programme.")
                 clear_screen(2)
@@ -280,7 +295,7 @@ def withdrawal(amount, name):
     latest_transaction = cursor.fetchone()
     print(f"You withdrew: £{latest_transaction[2]:.2f} | balance: £{latest_transaction[0]:.2f} | Time: {latest_transaction[1]}")
 
-#------------------ main programm ----------------------------------
+#============================ main programm ========================
 def main():
     clear_screen(0)
 #-------------------------------- Welcome message -------------------------------------------------------------------------
